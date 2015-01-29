@@ -74,13 +74,13 @@ module TranslatedCollection
     end
 
     def clone
-      self.clone.tap do |newobj|
+      super.tap do |newobj|
         newobj.instance_variable_set("@collection", @collection.clone)
       end
     end
 
     def dup
-      self.dup.tap do |newobj|
+      super.tap do |newobj|
         newobj.instance_variable_set("@collection", @collection.dup)
       end
     end
@@ -108,5 +108,11 @@ module TranslatedCollection
       @collection.clear
       xlated.each {|elt| @collection << elt }
     end
+
+    def is_a?(clazz)
+      super(clazz) || @collection.is_a?(clazz)
+    end
+
+    alias :kind_of? :is_a?
   end
 end
