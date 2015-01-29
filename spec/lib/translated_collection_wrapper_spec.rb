@@ -110,6 +110,13 @@ describe TranslatedCollection::Wrapper do
     end
 
     context '.include?' do
+      it 'should indicate that the translated form is present' do
+        subject.should include('A')
+      end
+
+      it 'should indicate that the un-translated form is NOT present' do
+        subject.should_not include('a')
+      end
 
     end
 
@@ -125,12 +132,28 @@ describe TranslatedCollection::Wrapper do
   end
 
   context 'copying' do
-    it 'should return a new instance of itself on clone'
-    it 'should wrap a copy of the collection on clone'
+    it 'should return a new instance of itself on clone'do
+      subject.clone.__id__.should_not == subject.__id__
+    end
+
+    it 'should wrap a copy of the collection on clone' do
+      coll_id = subject.collection.__id__
+      subject.clone.collection.__id__.should_not == coll_id
+    end
+
   end
 
   context 'introspection' do
-    it 'should claim to be an instance of proxied collection'
+    it 'should claim to be an instance of proxied collection if Array' do
+      subject.should be_a_kind_of(Array)
+      subject.should_not be_a_kind_of(Set)
+    end
+
+    it 'should claim to be an instance of proxied collection if Set' do
+      wrapped = TranslatedCollection::Wrapper.new(Set.new(%w[a b c]), lowerfn, upperfn)
+      wrapped.should be_a_kind_of(Set)
+      wrapped.should_not be_a_kind_of(Array)
+    end
   end
 
   context 'observation' do
