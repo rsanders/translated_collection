@@ -13,6 +13,26 @@ def conn
   ActiveRecord::Base.connection
 end
 
+def upperfn
+  lambda {|elt| elt.upcase }
+end
+
+def lowerfn
+  lambda {|elt| elt.downcase }
+end
+
+def collection
+  %w[a b c d e f g h i j k l]
+end
+
+def wrapone
+  TranslatedCollection::Wrapper.new(collection, lowerfn, upperfn)
+end
+
+def wrapped
+  @wrapped ||= wrapone
+end
+
 begin
   require 'pry'
   Pry.start
