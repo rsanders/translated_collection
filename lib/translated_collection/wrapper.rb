@@ -71,6 +71,7 @@ module TranslatedCollection
         changed
         notify_observers(:clear)
       end
+      self
     end
 
     def clone
@@ -114,5 +115,52 @@ module TranslatedCollection
     end
 
     alias :kind_of? :is_a?
+
+    #
+    # Used to wrap results from various Enumerable methods that are defined
+    # to return an array
+    #
+    def _rewrap_array(result)
+      newcoll = @collection.class.new(result)
+      self.class.new(newcoll, @wrapfunc_in, @wrapfunc_out)
+    end
+
+    def _wrap_enumerator(enumerator)
+      Enumerator.new do |y|
+        loop do
+          y << @wrapfunc_out.call(enumerator.next)
+        end
+      end
+    end
+
+    # methods that take a block and return an array, or return an enumerator
+    %w[collect collect_concat drop_while find_all
+       flat_map map select sort_by take_while].each do |meth|
+      define_method(meth) do |*args, &blk|
+        if blk
+          blk2 = Proc.new {|elt| blk.call(@wrapfunc_out.call(elt)) }
+          _rewrap_array(@collection.__send__(meth, *args, &blk2))
+        else
+          _wrap_enumerator(@collection.__send__(meth, *args))
+        end
+      end
+    end
+
+    def reject!(&blk)
+      if blk
+        @collection.reject! {|x| blk.call(@wrapfunc_out.call(x)) } && self
+      else
+        _wrap_enumerator(@collection.reject!)
+      end
+    end
+
+    # class WrappedEnumerator
+    #   def initialize(enum, func)
+    #     @enum = enum
+    #     @func = func
+    #   end
+    #
+    #
+    # end
   end
 end

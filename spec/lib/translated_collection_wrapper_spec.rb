@@ -78,13 +78,13 @@ describe TranslatedCollection::Wrapper do
   end
 
   context 'reading' do
-    context '.[]' do
+    context '#[]' do
       it 'should return xlated element at index' do
         subject[0].should == 'A'
       end
     end
 
-    context '.fetch' do
+    context '#fetch' do
       it 'should return xlated element on hit' do
         subject.fetch(1).should == 'B'
       end
@@ -94,7 +94,7 @@ describe TranslatedCollection::Wrapper do
       end
     end
 
-    context '.each' do
+    context '#each' do
       it 'should yield each element in order' do
         res = []
         subject.each {|elt| res << elt}
@@ -103,13 +103,13 @@ describe TranslatedCollection::Wrapper do
 
     end
 
-    context '.map' do
+    context '#map' do
       it 'should yield each element in order, and return all' do
-        subject.map {|elt| elt+elt}.should == %w[AA BB CC]
+        subject.map {|elt| elt+elt}.to_a.should == %w[AA BB CC]
       end
     end
 
-    context '.include?' do
+    context '#include?' do
       it 'should indicate that the translated form is present' do
         subject.should include('A')
       end
@@ -117,19 +117,106 @@ describe TranslatedCollection::Wrapper do
       it 'should indicate that the un-translated form is NOT present' do
         subject.should_not include('a')
       end
-
     end
 
 
   end
 
-  context 'destructive updates' do
-
-  end
-
   context 'updating and returning a new collection' do
+    context '#reject' do
+        let :postreject do
+          subject.reject {|x| x.to_i % 2 == 0 }
+        end
 
+        it 'should remove elements from new collection' do
+          postreject.to_a.should_not == subject.to_a
+        end
+
+        it 'should return a new collection' do
+          postreject.__id__.should_not == subject.__id__
+        end
+
+        it 'should not alter old collection' do
+          expect { postreject }.not_to change { subject.to_a }
+        end
+      end
   end
+
+  context 'destructive updates' do
+    context '#clear' do
+      it 'should return same class on clear' do
+        subject.clear.should be_a(described_class)
+      end
+
+      it 'should be empty after clear' do
+        expect { subject.clear }.not_to change { subject.__id__ }
+      end
+    end
+
+    context '#reject!' do
+      let :postreject do
+        subject.reject! {|x| x.to_i % 2 == 0 }
+      end
+
+      it 'should remove elements from original' do
+        expect { postreject }.to change { subject.to_a }
+      end
+
+      it 'should not return a new collection' do
+        postreject.__id__.should == subject.__id__
+      end
+
+      it 'should remove the correct elements' do
+        postreject.to_a.should == []
+      end
+
+      it 'should return nil if no changes were made' do
+        subject.reject! {|x| x == Object.new }.should be_nil
+      end
+    end
+  end
+
+  context 'Enumerable' do
+    let :collection do
+      %w[a b c d e f g h i j k l]
+    end
+
+    context 'methods with optional block' do
+      context '#drop_while' do
+        it 'should invoke condition block on translated-out values' do
+          subject.drop_while {|x| x < 'C'}.to_a.should == %w[C D E F G H I J K L]
+        end
+      end
+
+      context '#map' do
+        it 'should invoke map block on translated-out values' do
+          subject.map {|x| x * 3}.to_a.should == %w[AAA BBB CCC DDD EEE FFF GGG HHH III JJJ KKK LLL]
+        end
+      end
+
+      context '#collect' do
+        it 'should invoke collect block on translated-out values' do
+          subject.collect {|x| x * 3}.to_a.should == %w[AAA BBB CCC DDD EEE FFF GGG HHH III JJJ KKK LLL]
+        end
+      end
+
+      context '#find_all' do
+        it 'should invoke condition block on translated-out values' do
+          subject.find_all {|x| x.to_i % 2 == 0 }.to_a.should == %w[A B C D E F G H I J K L]
+        end
+
+      end
+
+      context '#sort_by' do
+
+      end
+
+      context '#take_while' do
+
+      end
+    end
+  end
+
 
   context 'copying' do
     it 'should return a new instance of itself on clone'do
