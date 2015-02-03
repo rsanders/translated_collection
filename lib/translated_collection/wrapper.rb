@@ -202,5 +202,12 @@ module TranslatedCollection
         _wrap_enumerator(@collection.reject!)
       end
     end
+
+    def map!(&blk)
+      @collection.map! {|x| @wrapfunc_in.call(blk.call(@wrapfunc_out.call(x))) }
+      @wrap_results ? self : self.to_a
+    end
+
+    alias :collect! :map!
   end
 end

@@ -20,6 +20,41 @@ describe TranslatedCollection::Wrapper do
     collection.map {|elt| upperfn.call(elt)}
   end
 
+  context 'duck API' do
+    context 'Enumerable methods' do
+      %w[all?  any?  as_json  chunk  collect  collect_concat  count  cycle  detect
+         drop  drop_while  each_cons  each_entry  each_slice  each_with_index  each_with_object
+         entries  exclude?  find  find_all  find_index  first  flat_map  grep  group_by
+         include?  index_by  inject  many?  map  max  max_by  member?  min  min_by  minmax
+         minmax_by  none?  one?  partition  reduce  reject  reverse_each  select  slice_before
+         sort  sort_by  sum  take  take_while  to_a  to_set  zip].each do |meth|
+        it { should respond_to(meth) }
+      end
+    end
+
+    context 'Array-like methods' do
+    end
+
+    context 'Destructive update methods' do
+      %w[map! collect! clear push []= reject!].each do |meth|
+        it { should respond_to(meth) }
+      end
+
+      %w[compact! fill flatten! reverse! rotate! select! shuffle! slice! sort_by! sort! uniq!].each do |meth|
+        it "should implement #{meth}" do
+          pending "Not implemented yet"
+        end
+      end
+    end
+
+    context 'Conversion methods' do
+      %w[to_a to_set].each do |meth|
+        it { should respond_to(meth) }
+      end
+    end
+
+  end
+
   context 'creation' do
     let :collection do
       %w[a b C]
@@ -172,6 +207,22 @@ describe TranslatedCollection::Wrapper do
 
       it 'should return nil if no changes were made' do
         subject.reject! {|x| x == Object.new }.should be_nil
+      end
+    end
+
+    context '#map!' do
+      it 'should yield each element in order, and return all' do
+        subject.map! {|elt| elt+elt}.to_a.should == %w[AA BB CC]
+      end
+
+      it 'should yield each element in order, and return all unwrapped if configured' do
+        subject.wrap_results = false
+        subject.map! {|elt| elt+elt}.should == %w[AA BB CC]
+      end
+
+      it 'should alter the original array' do
+        expect { subject.map! {|elt| elt+elt} }.
+            to change { subject.collection }.to %w[aa bb cc]
       end
     end
   end

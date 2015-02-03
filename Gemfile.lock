@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    translated_collection (0.1.0)
+    translated_collection (0.1.1)
 
 GEM
   remote: https://rubygems.org/
