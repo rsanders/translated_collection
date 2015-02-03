@@ -6,11 +6,14 @@ module TranslatedCollection
     include Observable
 
     attr_reader :collection
+    attr_accessor :wrap_results
 
     def initialize(collection, wrapfunc_in, wrapfunc_out, check = false)
       @collection   = collection
       @wrapfunc_in  = wrapfunc_in
       @wrapfunc_out = wrapfunc_out
+
+      @wrap_results = true
 
       raise ArgumentError, "Non-conforming array provided" if
           check && !collection.empty? && !_conforming?
@@ -147,8 +150,12 @@ module TranslatedCollection
     # to return an array
     #
     def _rewrap_array(result)
-      newcoll = @collection.class.new(result)
-      self.class.new(newcoll, @wrapfunc_in, @wrapfunc_out)
+      if @wrap_results
+        newcoll = @collection.class.new(result)
+        self.class.new(newcoll, @wrapfunc_in, @wrapfunc_out)
+      else
+        @collection.class.new(result.map(&@wrapfunc_out))
+      end
     end
 
     def _wrap_enumerator(enumerator)
@@ -161,9 +168,23 @@ module TranslatedCollection
       end
     end
 
-    # methods that take a block and return an array, or return an enumerator
+    # methods that take a block that accepts one or more elements
+    # and return an array
+    %w[sort].each do |meth|
+      define_method(meth) do |*args, &blk|
+        unless blk
+          blk = Proc.new {|a,b| @wrapfunc_out.call(a) <=> @wrapfunc_out.call(b) }
+        end
+
+        blk2 = Proc.new {|a,b| blk.call(@wrapfunc_out.call(a), @wrapfunc_out.call(b)) }
+        _rewrap_array(@collection.__send__(meth, *args, &blk2))
+      end
+    end
+
+    # methods that take a block which accepts a single element of the collection,
+    # and return an array, or if no block, return an enumerator
     %w[collect collect_concat drop_while find_all
-       flat_map map select sort_by take_while].each do |meth|
+       flat_map map select take_while sort_by].each do |meth|
       define_method(meth) do |*args, &blk|
         if blk
           blk2 = Proc.new {|elt| blk.call(@wrapfunc_out.call(elt)) }

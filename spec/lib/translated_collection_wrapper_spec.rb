@@ -206,12 +206,63 @@ describe TranslatedCollection::Wrapper do
         end
       end
 
+      context '#sort' do
+        let :collection do
+           (-5..0).to_a.reverse
+        end
+
+        subject do
+          TranslatedCollection::Wrapper.new(collection,
+                                            Proc.new {|x| -(x.abs)},
+                                            Proc.new {|x| x.abs})
+        end
+
+        it 'should return a wrapped array by default' do
+          subject.sort.should be_a_kind_of(TranslatedCollection::Wrapper)
+        end
+
+        it 'should return a bare array if configured' do
+          subject.wrap_results = false
+          subject.sort.class.should == Array
+        end
+
+        it 'should sort elements by comparison on translated-out elements' do
+          subject.sort.to_a.should == (0..5).to_a
+        end
+
+        it 'should sort elements by comparison on translated-out elements' do
+          subject.sort.collection.should == (-5..0).to_a.reverse
+        end
+      end
+
       context '#sort_by' do
-        it 'should sort elements by comparison on translated-out elements'
+        let :collection do
+           (-5..0).to_a.reverse
+        end
+
+        subject do
+          TranslatedCollection::Wrapper.new(collection,
+                                            Proc.new {|x| x-1},
+                                            Proc.new {|x| x+1})
+        end
+
+        it 'should sort elements by comparison on translated-out elements' do
+          subject.sort_by(&:abs).to_a.should == [0, 1, -1, -2, -3, -4]
+        end
+
+        it 'should sort elements by comparison on translated-out elements' do
+          subject.sort_by(&:abs).collection.should == [-1, 0, -2, -3, -4, -5]
+        end
       end
 
       context '#take_while' do
-        it 'should evaluate condition on translated-out elements'
+        it 'should evaluate condition on translated-out elements' do
+          subject.take_while {|x| x <= 'C'}.to_a.should == %w[A B C]
+        end
+
+        it 'should internally store the non-translated elements' do
+          subject.take_while {|x| x <= 'C'}.collection.should == %w[a b c]
+        end
       end
     end
   end
