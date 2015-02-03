@@ -204,30 +204,66 @@ describe TranslatedCollection::Wrapper do
         it 'should invoke condition block on translated-out values' do
           subject.find_all {|x| x.to_i % 2 == 0 }.to_a.should == %w[A B C D E F G H I J K L]
         end
-
       end
 
       context '#sort_by' do
-
+        it 'should sort elements by comparison on translated-out elements'
       end
 
       context '#take_while' do
-
+        it 'should evaluate condition on translated-out elements'
       end
     end
   end
 
 
   context 'copying' do
-    it 'should return a new instance of itself on clone'do
-      subject.clone.__id__.should_not == subject.__id__
+    context '#clone' do
+      it 'should return a new instance of itself'do
+        subject.clone.__id__.should_not == subject.__id__
+      end
+
+      it 'should wrap a copy of the collection' do
+        coll_id = subject.collection.__id__
+        subject.clone.collection.__id__.should_not == coll_id
+      end
+
+      it 'should keep the translated-in versions of elements in the copy' do
+        subject.clone.collection.should == subject.collection
+      end
+
+      it 'should preserve frozen status' do
+        subject.freeze
+        copy = subject.clone
+
+        copy.should be_frozen
+        copy.collection.should be_frozen
+      end
     end
 
-    it 'should wrap a copy of the collection on clone' do
-      coll_id = subject.collection.__id__
-      subject.clone.collection.__id__.should_not == coll_id
-    end
 
+    context '#dup' do
+      it 'should return a new instance of itself'do
+        subject.dup.__id__.should_not == subject.__id__
+      end
+
+      it 'should wrap a copy of the collection' do
+        coll_id = subject.collection.__id__
+        subject.dup.collection.__id__.should_not == coll_id
+      end
+
+      it 'should keep the translated-in versions of elements in the copy' do
+        subject.dup.collection.should == subject.collection
+      end
+
+      it 'should not preserve frozen status' do
+        subject.freeze
+        copy = subject.dup
+
+        copy.should_not be_frozen
+        copy.collection.should_not be_frozen
+      end
+    end
   end
 
   context 'introspection' do

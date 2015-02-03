@@ -74,9 +74,16 @@ module TranslatedCollection
       self
     end
 
+    def self.copy_clone_states(from,to)
+      to.taint  if from.tainted? && ! to.tainted?
+      to.freeze if from.frozen?  && ! to.frozen?
+      to
+    end
+
     def clone
-      super.tap do |newobj|
-        newobj.instance_variable_set("@collection", @collection.clone)
+      dup.tap do |newobj|
+        newobj.instance_variable_set("@collection", self.class.copy_clone_states(@collection, @collection.dup))
+        self.class.copy_clone_states(self, newobj)
       end
     end
 
