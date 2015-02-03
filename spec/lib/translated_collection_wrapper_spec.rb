@@ -366,10 +366,23 @@ describe TranslatedCollection::Wrapper do
     end
 
     context '#pop' do
+      it 'should trigger update' do
+        expect { subject.pop }.
+            to change { state.count }.by(1)
+      end
 
+      it 'should add event to list' do
+        expect { subject.pop }.
+            to change { state.events }.from([]).to([:pop])
+      end
     end
 
-
+    context '[]' do
+      it 'should not trigger update' do
+        expect { subject[0] }.
+            not_to change { state.count }.by(1)
+      end
+    end
   end
 
 end

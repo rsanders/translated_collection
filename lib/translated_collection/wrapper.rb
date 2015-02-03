@@ -48,6 +48,22 @@ module TranslatedCollection
 
     alias :push :<<
 
+    def pop(count=nil)
+      if @collection.count > 0
+        if count == nil
+          value = @wrapfunc_out.call(@collection.pop)
+        else
+          value = @collection.pop(count).map(&@wrapfunc_out)
+        end
+        changed
+        notify_observers(self, :pop)
+      else
+        value = nil
+      end
+
+      value
+    end
+
     def delete(elt)
       @collection.delete(@wrapfunc_in.call(elt)).tap do |removed|
         if removed
