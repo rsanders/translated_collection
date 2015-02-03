@@ -60,10 +60,10 @@ PLATFORMS
 DEPENDENCIES
   activerecord (~> 4.2.0)
   bundler (~> 1.7)
-  pg (>= 0.17.1)
+  pg (~> 0.17, >= 0.17.1)
   pry
   rake (~> 10.0)
-  rspec (~> 2.14.0)
-  simplecov
+  rspec (~> 2.14)
+  simplecov (~> 0.9)
   translated_collection!
-  wwtd
+  wwtd (~> 0.7)
