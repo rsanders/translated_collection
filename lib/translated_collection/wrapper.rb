@@ -35,14 +35,14 @@ module TranslatedCollection
     def []=(key, value)
       @collection[key] = @wrapfunc_in.call(value).tap do |xlated|
         changed
-        notify_observers(:set, key, xlated)
+        notify_observers(self, :set, key, xlated)
       end
     end
 
     def <<(value)
       @collection <<  @wrapfunc_in.call(value).tap do |xlated|
         changed
-        notify_observers(:push, xlated)
+        notify_observers(self, :push, xlated)
       end
     end
 
@@ -52,7 +52,7 @@ module TranslatedCollection
       @collection.delete(@wrapfunc_in.call(elt)).tap do |removed|
         if removed
           changed
-          notify_observers(:delete, removed)
+          notify_observers(self, :delete, removed)
         end
       end
     end
@@ -61,7 +61,7 @@ module TranslatedCollection
       @collection.delete_at(pos).tap do |removed|
         if removed
           changed
-          notify_observers(:delete, removed) if removed
+          notify_observers(self, :delete, removed) if removed
         end
       end
     end
@@ -69,7 +69,7 @@ module TranslatedCollection
     def clear
       @collection.clear.tap do
         changed
-        notify_observers(:clear)
+        notify_observers(self, :clear)
       end
       self
     end
@@ -115,6 +115,9 @@ module TranslatedCollection
       xlated = @collection.map {|elt| @wrapfunc_in.call(elt) }
       @collection.clear
       xlated.each {|elt| @collection << elt }
+      changed
+      notify_observers(self, :misc)
+      self
     end
 
     def is_a?(clazz)
@@ -135,6 +138,8 @@ module TranslatedCollection
     def _wrap_enumerator(enumerator)
       Enumerator.new do |y|
         loop do
+          changed
+          notify_observers(self, :misc)
           y << @wrapfunc_out.call(enumerator.next)
         end
       end
@@ -160,14 +165,5 @@ module TranslatedCollection
         _wrap_enumerator(@collection.reject!)
       end
     end
-
-    # class WrappedEnumerator
-    #   def initialize(enum, func)
-    #     @enum = enum
-    #     @func = func
-    #   end
-    #
-    #
-    # end
   end
 end

@@ -280,28 +280,89 @@ describe TranslatedCollection::Wrapper do
   end
 
   context 'observation' do
-    context '#[]=' do
+    let :state do
+      Struct.new(:count, :events) do
+        def observeit(object, event, *args)
+          self.count += 1
+          self.events << event
+        end
+      end.new(0, [])
+    end
 
+    before do
+      subject.add_observer(state, :observeit)
+    end
+
+    context '#[]=' do
+      it 'should trigger update' do
+        expect { subject[5] = 'foo' }.
+            to change { state.count }.by(1)
+      end
+
+      it 'should add event to list' do
+        expect { subject[5] = 'foo' }.
+            to change { state.events }.from([]).to([:set])
+      end
     end
 
     context '#clear' do
+      it 'should trigger update' do
+        expect { subject.clear}.
+            to change { state.count }.by(1)
+      end
 
+      it 'should add event to list' do
+        expect { subject.clear }.
+            to change { state.events }.from([]).to([:clear])
+      end
     end
 
     context '#delete' do
+      it 'should trigger update' do
+        expect { subject.delete('a') }.
+            to change { state.count }.by(1)
+      end
 
+      it 'should add event to list' do
+        expect { subject.delete('a') }.
+            to change { state.events }.from([]).to([:delete])
+      end
     end
 
     context '#delete_at' do
+      it 'should trigger update' do
+        expect { subject.delete_at(0) }.
+            to change { state.count }.by(1)
+      end
 
+      it 'should add event to list' do
+        expect { subject.delete_at(0) }.
+            to change { state.events }.from([]).to([:delete])
+      end
     end
 
     context '#<<' do
+      it 'should trigger update' do
+        expect { subject << 'foo' }.
+            to change { state.count }.by(1)
+      end
 
+      it 'should add event to list' do
+        expect { subject << 'foo' }.
+            to change { state.events }.from([]).to([:push])
+      end
     end
 
     context '#push' do
+      it 'should trigger update' do
+        expect { subject.push 'foo' }.
+            to change { state.count }.by(1)
+      end
 
+      it 'should add event to list' do
+        expect { subject.push 'foo' }.
+            to change { state.events }.from([]).to([:push])
+      end
     end
 
     context '#pop' do
